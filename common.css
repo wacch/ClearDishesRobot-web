@@ -1,0 +1,39 @@
+/* 見た目調節用のborder */
+/* 一括でコメントアウト(Ctrl+/)することでborderを表示/非表示できる */ */
+/* .container {
+    border: solid 1px #f00 !important;
+}
+.wrapper {
+    border: solid 1px #f00 !important;
+}
+h1 {
+    border: solid 1px #f00 !important;
+}
+button {
+    border: solid 1px #f00 !important;
+}
+
+
+/* 共通設定 */
+* {
+    color: #454545;
+}
+.container {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 70%;
+    margin: 0 auto;
+    padding: 2vw;
+}
+.container > * {
+    margin-bottom: 2vw;
+}
+.wrapper {
+    box-sizing: border-box;
+}
+h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: normal;
+}

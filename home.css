@@ -1,0 +1,36 @@
+.wrapper {
+    display: flex;
+    flex-direction: column;
+}
+.wrapper > button {
+    box-sizing: border-box;
+    font-size: 32px;
+    width: 60ex;
+    height: 6ex;
+    margin: 3ex auto;
+    padding: 0;
+    border: none;
+    border-radius: 1ex;
+}
+
+.wrapper > button:nth-child(1) {
+    background: #92D050;
+}
+.wrapper > button:nth-child(1):hover {
+    background: #2d5009;
+    color: #fff;
+}
+.wrapper > button:nth-child(1):active {
+    background: #92D050;
+}
+
+.wrapper > button:nth-child(2) {
+    background: #F4B183;
+}
+.wrapper > button:nth-child(2):hover {
+    background: #5f381e;
+    color: #fff;
+}
+.wrapper > button:nth-child(2):active {
+    background: #F4B183;
+}

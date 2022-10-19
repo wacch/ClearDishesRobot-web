@@ -1,0 +1,30 @@
+.wrapper {
+    padding: 1vw;
+    display: flex;
+    flex-direction: column;
+}
+.wrapper > p {
+    text-align: center;
+}
+.wrapper > p:nth-child(1) {
+    font-size: 32px;
+}
+.container > button {
+    display: block;
+    font-size: 16px;
+    width: 10ex;
+    height: 5ex;
+    margin: 0 0 0 auto;
+    border: none;
+    color: #fff;
+    background: rgb(218, 80, 67);
+}
+.container > button:hover {
+    background: rgb(109, 25, 17);
+}
+.container > button:active {
+    background: rgb(218, 80, 67);
+}
+#seat {
+    color: #f00;
+}
