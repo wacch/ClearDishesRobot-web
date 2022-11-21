@@ -57,11 +57,23 @@ def Socket_Server():
 	cl, address = sv.accept()
 	print(f"Socket Accept: Connection from {address} has been established")
 	
-	#片道一回の送信、While無し
-	msg = pickle.dumps(data)
-	print("Send to client:", msg)
-	cl.send(msg)
+	while True:	
+		print("Wait: 応答待機中 ", end="")
+		msg = cl.recv(1024)
+		print("--> recv:", msg.decode("utf-8"))
+		
+		cmd = input("Send: コマンドを入力してください")
+		if cmd == "e":
+			break
+		cl.send(bytes(cmd, "utf-8"))
+		
 	cl.close()
+	
+	#片道一回の送信、While無し
+	#msg = pickle.dumps(data)
+	#print("Send to client:", msg)
+	#cl.send(msg)
+	#cl.close()
 	#busy = False
 
 #busy = False
