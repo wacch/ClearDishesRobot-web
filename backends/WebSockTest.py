@@ -12,8 +12,7 @@ class Websocket_Client():
         # デバックログの表示/非表示設定
         websocket.enableTrace(True)
 
-        # WebSocketAppクラスを生成
-        # 関数登録のために、ラムダ式を使用
+        # おまじない
         self.ws = websocket.WebSocketApp(host_addr,
             on_message = lambda ws, msg: self.on_message(ws, msg),
             on_error   = lambda ws, msg: self.on_error(ws, msg),
@@ -51,6 +50,6 @@ class Websocket_Client():
         self.ws.run_forever()
 
 
-HOST_ADDR = "ws://192.168.3.50:9001/"
+HOST_ADDR = "ws://192.168.3.50:9001/" #アドレス設定
 ws_client = Websocket_Client(HOST_ADDR)
 ws_client.run_forever()
