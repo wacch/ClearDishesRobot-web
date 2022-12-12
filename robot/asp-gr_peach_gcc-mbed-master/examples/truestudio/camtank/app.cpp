@@ -10,8 +10,8 @@
 #define SERVER_ADDRESS "192.168.3.50"
 #define SERVER_PORT 9002
 
-//static void _wlan_inf_callback(uint8_t ucType, uint16_t usWid, uint16_t usSize, uint8_t *pucData);
-//static void error_wait(int ret, const char* str);
+static void _wlan_inf_callback(uint8_t ucType, uint16_t usWid, uint16_t usSize, uint8_t *pucData);
+static void error_wait(int ret, const char* str);
 
 GR_PEACH_WlanBP3595 wlan;			// Wifiルータ用
 TCPSocketConnection socket;			// TCPソケット変数
@@ -44,7 +44,7 @@ void ledBlink(int r, int g, int b,int count,int interval){
 }
 
 // WiFi Routerとの接続
-/*void WiFi_init() {
+void WiFi_init() {
 	int ret;
 
 	wlan.setWlanCbFunction(_wlan_inf_callback);
@@ -91,7 +91,6 @@ void connect_tcp_session() {
 	pc.printf("Socket connected\r\n");
 	pc.printf("server IP&port= %s, %d\r\n",SERVER_ADDRESS, SERVER_PORT);	//　成功
 }
-*/
 
 void tuning_IR(int *threshold){
 	char c = 0, WorB, drop = 30;
@@ -142,7 +141,8 @@ void task_main(intptr_t exinf) {
 	pc.baud(115200);
 	pc.printf("Initializing...\r\n");
 
-	IrBitField_T irbits;
+	int ret;
+	/*IrBitField_T irbits;
 	unsigned int IR_values[6];
 	int threshold[6];
 	char position[2] = {0,0}, rotation = 0;
@@ -167,38 +167,48 @@ void task_main(intptr_t exinf) {
 			zumo.driveTank(0,0);
 			dly_tsk(250);
 		}
-	}
+	}*/
 	/*dly_tsk(5000);
 	tuning_IR(threshold);
 	for(int i=0;i<6;i++){
 		pc.printf("threshold[%d]:%d,\r\n",i,threshold[i]);
 	*/
 
-	/*
+
 	//networkの初期化
 	WiFi_init();
 	connect_tcp_session();
 
 	//文字列を送信する
-	char* data = strdup("Connection Success\r\n");
-	for (int i=0; i<20; ++i){
-		ret = socket.send(data, strlen(data)); //文字列,文字数
-		if(ret<0){
-			pc.printf("socket send error\r\n");
-			return;
-		}
-		else{
-			pc.printf("socket send %d byte\r\n", ret);
-		}
+	char* data = strdup("route");
+	//for (int i=0; i<20; ++i){
+	ret = socket.send(data, strlen(data)); //文字列,文字数
+	if(ret<0){
+		pc.printf("MierBot/Recv: socket send error\r\n");
+		return;
+	}else{
+		pc.printf("MierBot/Recv: socket send %d byte\r\n", ret);
 	}
-	dly_tsk(1000); //サーバが受信し終えるのを待つ
 
-	char rstr[1];
+	dly_tsk(1000); //サーバが受信し終えるのを待つ*/
+
+	char rstr[128];
 	while (1) {
 		ledStatus(0,1,1);
 		zumo.driveTank(0,0);
-		ret = socket.receive(rstr, 1);
+		ret = socket.receive(rstr, 128);
 		if(ret >= 0){
+			pc.printf("MierBot/Recv: arrived optimized route: %s\r\n",rstr);
+			//pc.printf("MierBot/Recv: socket close, wlan disconnect\r\n");
+			//socket.close();
+			//wlan.disconnect();
+			break;
+		}else{
+			ledStatus(1,0,0);
+		}
+
+		//実験用ラジコンコード
+		/*if(ret >= 0){
 			ledStatus(1,0,1);
 			pc.printf("rcv command = %s\r\n",rstr[0]);
 			switch (rstr[0]) {
@@ -228,11 +238,11 @@ void task_main(intptr_t exinf) {
 			ret = socket.send("comp", 4);
 		}else{
 			ledStatus(1,0,0);
-		}
-	}*/
+		}*/
+	}
 }
 
-/*static void _wlan_inf_callback( uint8_t ucType, uint16_t usWid, uint16_t usSize, uint8_t *pucData ){
+static void _wlan_inf_callback( uint8_t ucType, uint16_t usWid, uint16_t usSize, uint8_t *pucData ){
 	 if (ucType=='I'){
 		 if(usWid ==0x0005){
 			 if(pucData[0]==0x01){
@@ -253,4 +263,4 @@ static void error_wait(int ret, const char* str){
 		}
 	}
 }
-*/
+

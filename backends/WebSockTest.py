@@ -5,7 +5,7 @@ except ImportError:
     import _thread as thread
 import time
 
-class Websocket_Client():
+class WebsocketClient():
 
     def __init__(self, host_addr):
 
