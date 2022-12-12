@@ -99,14 +99,21 @@ class Ant:
         self.totalDis += field.distance[self.route[field.nodeNum-2]][next_n]
         self.totalDis += field.distance[next_n][0]
         
+        '''
+        #毎探索ルートの表示-※動作遅くなる
         print(self.totalDis)
         print(self.route)
+        print('')
+        '''
+        
         Ant.minDis.append(self.totalDis) #これまでの探索での経路長を保存
+        
         '''
-        #print('経路長',Ant.minDis)
-        #print('最短経路リスト',Ant.minList)
-        '''
+        #デバック用
+        print('経路長',Ant.minDis)
+        print('最短経路リスト',Ant.minList)
         print()
+        '''
         if self.totalDis <= min(Ant.minDis):
             Ant.minList.append(copy.deepcopy(self.route))
 
@@ -139,6 +146,7 @@ class Field:
                 for j in range(len(line)):
                     self.distance[i][j]=float(line[i][j])
 
+
 #座標から距離行列を作成する関数
 def create_dist_matrix(places,f_name):
     dist_matrix=[[0 for i in range(len(places))] for j in range(len(places))] # 距離行列
@@ -147,6 +155,7 @@ def create_dist_matrix(places,f_name):
         for j in range(len(places)):  
             if i==j:continue
             else:
+                
                 '''
                 #ユークリッド距離を計算
                 dist_matrix[i][j]=math.sqrt((places[i][0]-places[j][0])**2+(places[i][1]-places[j][1])**2)
@@ -163,58 +172,66 @@ def create_dist_matrix(places,f_name):
 
 #メイン部分        
 REPEAT_NUM = 100 # 繰り返し数
-ANT_NUM = 50   # アリの数
+ANT_NUM = 100   # アリの数
 PHERO_Q = 10       # 1回の巡回で分泌するフェロモン
 EVA_R = 0.05       # フェロモンの蒸発率
 PHERO_R = 0.95     # フェロモンに基づいて経路を選択する確率
 PHERO_L = 1        # フェロモンを考慮する度合い
 HEU_L = 1          # ヒューリスティック情報を考慮する度合い
+places = []
+OptRuteCIE = []
+OptRuteCIE1 =[]
+
+#入力
+place =["A","B","C","D","E","F","G","H","I","J","K","L","M","N"]
+for i in range(len(place)):
+    if place[i] == "A":
+        places.append((0,0))
+    if place[i] == "B":
+        places.append((0,5))
+    if place[i] == "C":
+        places.append((0,10))
+    if place[i] == "D":
+        places.append((0,15))
+    if place[i] == "E":
+        places.append((5,15))
+    if place[i] == "F":
+        places.append((10,15))
+    if place[i] == "G":
+        places.append((15,15))
+    if place[i] == "H":
+        places.append((20,15))
+    if place[i] == "I":
+        places.append((20,10))
+    if place[i] == "J":
+        places.append((20,5))
+    if place[i] == "K":
+        places.append((7.5,10))
+    if place[i] == "L":
+        places.append((7.5,5))
+    if place[i] == "M":
+        places.append((12.5,10))
+    if place[i] == "N":
+        places.append((12.5,5))
 
 
 
-#確認用座標
-places = [(0,0),
-          (1,0),
-          (1,1),
-          (0,1)
-          ]
-
-
-'''
-#TSPのサンプル問題
-places = [(-0.0000000400893815,    0.0000000358808126), 
-          (-28.8732862244731230,  -0.0000008724121069), 
-          (-79.2915791686897506,  21.4033307581457670), 
-          (-14.6577381710829471,  43.3895496964974043), 
-          (-64.7472605264735108, -21.8981713360336698), 
-          (-29.0584693142401171,  43.2167287683090606), 
-          (-72.0785319657452987,  -0.1815834632498404), 
-          (-36.0366489745023770,  21.6135482886620949), 
-          (-50.4808382862985496,  -7.3744722432402208), 
-          (-50.5859026832315024,  21.5881966132975371), 
-          (-0.1358203773809326,   28.7292896751977480), 
-          (-65.0865638413727368,  36.0624693073746769), 
-          (-21.4983260706612533,  -7.3194159498090388), 
-          (-57.5687244704708050,  43.2505562436354225), 
-          (-43.0700258454450875, -14.5548396888330487), 
-         ]
-'''
 '''
 #下げ膳のサンプル問題
-places = [(0,0),    #0
-          (0,5),    #1
-          (0,10),   #2
-          (0,15),   #3
-          (5,15),   #4
-          (10,15),  #5
-          (15,15),  #6
-          (20,15),  #7
-          (20,10),  #8
-          (20,5),   #9
-          (7.5,10), #10
-          (7.5,5),  #11
-          (12.5,10), #12  
-          (12.5,5), #13
+places = [(0,0),    #0 a
+          (0,5),    #1 b
+          (0,10),   #2 c
+          (0,15),   #3 d
+          (5,15),   #4 e
+          (10,15),  #5 f
+          (15,15),  #6 g
+          (20,15),  #7 h
+          (20,10),  #8 i
+          (20,5),   #9 j
+          (7.5,10), #10 k
+          (7.5,5),  #11 l
+          (12.5,10), #12 m  
+          (12.5,5), #13 n
           ]
 '''
 
@@ -237,6 +254,16 @@ print()
 for i in range(REPEAT_NUM):
     colony.selectRoute(field, ant)
     colony.renewPheromone(field, ant)
+    
+OptRute = Ant.minList[-1]
+for i in range(len(OptRute)):
+    OptRuteCIE.append(places[OptRute[i]])
+
+for i in range(len(OptRuteCIE)):
+    OptRuteCIE1.append(OptRuteCIE[i][0])
+    OptRuteCIE1.append(OptRuteCIE[i][1])
+
+
 '''
 #各ステップのノードのフェロモン量を表示
 #    print(str(i)+'ステップ目の各ノード間のフェロモン')
@@ -244,20 +271,32 @@ for i in range(REPEAT_NUM):
 #    print()
 '''
 
+#入力
+print('入力:',place)
+
+'''
+#入力リストの順番の座標
+print('入力順席座標:',places)
+
 #最短経路長を表示
 print('最短経路長:',min(Ant.minDis))
 
-
 #最短経路更新リストの最後を取り出し表示
-print('最短経路:',Ant.minList[-1])
+print('最短経路:',OptRute)
 
+#最適化後の座標リスト
+print('最適化座標:',OptRuteCIE)
+'''
+
+#最適化の座標リストを1次元に直したもの(出力)
+print('出力:',OptRuteCIE1)
 
 '''
 #ノードのフェロモン量を表示
 print('最終的な各枝のフェロモン')
 colony.printPheromone(field)
-'''
 
+'''
 '''
 # グラフの描画(フェロモン量)
 G = nx.Graph()
@@ -274,4 +313,10 @@ for i in range(len(places)):
             G.add_edge(i,j)
             edges.append(field.pheromone[i][j]*0.3)
 nx.draw(G, pos,width=edges)
+'''
+
+'''
+入力するリスト = place
+出力リスト = OptRuteCIE1
+
 '''
