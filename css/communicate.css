@@ -9,22 +9,51 @@
 .wrapper > p:nth-child(1) {
     font-size: 32px;
 }
-.container > button {
-    display: block;
+
+.wrapper > p:nth-child(3) {
+    margin: 1ex 0;
+    color: rgb(218, 80, 67)
+}
+
+.buttons * {
     font-size: 16px;
+    margin: 0 1ex;
     width: 10ex;
     height: 5ex;
-    margin: 0 0 0 auto;
     border: none;
     color: #fff;
+    display: inline-block;
+}
+
+.buttons {
+    text-align: right;
+}
+
+.buttons > button:nth-child(1) {
+    background: rgb(67, 175, 218);
+}
+
+.buttons > button:nth-child(2) {
     background: rgb(218, 80, 67);
 }
-.container > button:hover {
+
+.buttons > button:nth-child(1):hover {
+    background: rgb(13, 79, 105);
+}
+
+.buttons > button:nth-child(2):hover {
     background: rgb(109, 25, 17);
 }
-.container > button:active {
+
+.buttons > button:nth-child(1):active {
+    background: rgb(39, 124, 158);
+}
+
+.buttons > button:nth-child(2):active {
     background: rgb(218, 80, 67);
 }
+
+
 #seat {
     color: #f00;
 }

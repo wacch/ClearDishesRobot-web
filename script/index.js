@@ -1,5 +1,5 @@
-var num = Math.floor(Math.random()*6 + 1);
-document.getElementById('people').innerHTML = num;
+/*var num = Math.floor(Math.random()*6 + 1);
+document.getElementById('people').innerHTML = num;*/
 
 var url_params = new URLSearchParams(window.location.search);
 if(url_params.has('seat')){
@@ -7,11 +7,11 @@ if(url_params.has('seat')){
 }
 
 var btn_ok = document.getElementById('ok');
-var btn_no = document.getElementById('no');
+var btn_back = document.getElementById('back');
 
 btn_ok.addEventListener('click', function(){
-    window.location = 'index.html' + '?seat=' + url_params.get('seat');
+    window.location = 'communicate.html' + '?seat=' + url_params.get('seat');
 });
-btn_no.addEventListener('click', function(){
-    window.location = 'index.html';
+btn_back.addEventListener('click', function(){
+    window.location = 'select.html' + '?seat=' + url_params.get('seat');
 });

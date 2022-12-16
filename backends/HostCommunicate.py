@@ -13,7 +13,7 @@ PORT_SOCK = 9002
 BUFFER = 1024
 
 #data = ["A","E","F","D","G"]
-dataS = "A,E,F,D,G"
+seats = ""
 optimized_pos = "0,0"
 
 class Websocket_Server():
@@ -23,17 +23,17 @@ class Websocket_Server():
 	
 	def __init__(self, host, port):
 		self.server = WebsocketServer(port=PORT_WS, host=IP_ADDR)
-		print(Fore.CYAN + "WebSocket/Wait: Awaiting Connection")
+		FormatPrint(0,"wait","Awaiting Connection")
 
 	# クライアント接続時に呼ばれる関数
 	def new_client(self, client, server):
-		print(Fore.CYAN + "WebSocket/Accept: new client connected and was given id {}".format(client['id']))
+		FormatPrint(0, "accept", "new client connected and was given id {}".format(client['id']))
 		# 全クライアントにメッセージを送信
 		#self.server.send_message_to_all("hey all, a new client has joined us")
 
 	# クライアント切断時に呼ばれる関数
 	def client_left(self, client, server):
-		print(Fore.CYAN + "WebSocket/Close: client({}) disconnected".format(client['id']))
+		FormatPrint(0, "close", "client({}) disconnected".format(client['id']))
 
 		# 登録済みのクライアントから切断されたら、情報を削除
 		if client == self.client_route:
@@ -45,32 +45,37 @@ class Websocket_Server():
 
     # クライアントからメッセージを受信したときに呼ばれる関数
 	def message_received(self, client, server, message):
-		global optimized_pos
+		global optimized_pos, seats
 
-		print(Fore.CYAN + "WebSocket/Recv: client({}) said: {}".format(client['id'], message))
+		FormatPrint(0, "recv", "client({}) said: {}".format(client['id'], message))
 		# 全クライアントにメッセージを送信
 		#self.server.send_message_to_all(message)
 
 		# ルートサーチシステムから座標データが飛んできたときの処理
 		if client == self.client_route and self.client_route != 0:
-			optimized_pos = message #message.split(',')
-			print(Fore.CYAN + "WebSocket/Recv: arrived optimize route: {}".format(optimized_pos))
-		elif client == self.client_assign and self.client_route != 0:
-			print(Fore.CYAN + "WebSocket/Recv: arrived seats: {}".format(optimized_pos))
+			optimized_pos = message
+			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
+		# ルートアサインシステムから座席データが飛んできたときの処理
+		elif client == self.client_assign and self.client_assign != 0:
+			seats = message
+			FormatPrint(0, "recv", "arrived seats: {}".format(seats))
+			# 到達確認応答
+			self.server.send_message(self.client_assign, "ack")
+			# ここで座席データを送信
+			if(self.client_route != 0):
+				self.server.send_message(self.client_route, seats)
+				FormatPrint(0, "send", "Sending seats to RouteSearchSys: {}".format(seats))
 
 		# 各システムの初回接続時に飛んでくるメッセージを元に、クライアント情報を登録
 		if message == "routecalc" and self.client_route == 0:
 			self.client_route = client
-			print(Fore.CYAN + "WebSocket/Recv: route client({}) registerd".format(self.client_route['address']))
-			# ここで座席データを送信
-			self.server.send_message(self.client_route, dataS)
-			print(Fore.CYAN + "WebSocket/Send: Sending seats to RouteSearchSys: {}".format(dataS))
+			FormatPrint(0, "recv", "route client({}) registerd".format(self.client_route['address']))
 		elif message == "routeassign" and self.client_assign == 0:
 			self.client_assign = client
-			print(Fore.CYAN + "WebSocket/Recv: assign client({}) registerd".format(self.client_assign['address']))
+			FormatPrint(0, "recv", "assign client({}) registerd".format(self.client_assign['address']))
 		elif message == "robot" and self.client_robot == 0:
 			self.client_robot = client
-			print(Fore.CYAN + "WebSocket/Recv: assign client({}) registerd".format(self.client_robot['address']))
+			FormatPrint(0, "recv", "assign client({}) registerd".format(self.client_robot['address']))
 
 		'''
 		if message == "robot":
@@ -103,21 +108,21 @@ def TCP():
 	sv.bind((IP_ADDR, PORT_SOCK))
 
 	while True:
-		print(Fore.YELLOW + "TCP/Wait: Awaiting Connection")
+		FormatPrint(1,"wait","Awaiting Connection")
 		msg = ""
 		sv.listen(5)
 		cl, address = sv.accept()
-		print(Fore.YELLOW + "TCP/Accept: Connection from {} has been established".format(address))
+		FormatPrint(1,"accept"," Connection from {} has been established".format(address))
 		
 		while True:
-			print(Fore.YELLOW + Fore.YELLOW + "TCP/Wait: Awaiting Responce")
+			FormatPrint(1,"wait","Awaiting Responce")
 			msg = cl.recv(128).decode("utf-8")
-			print(Fore.YELLOW + "TCP/Recv: {}".format(msg))
+			FormatPrint(1,"recv","{}".format(msg))
 
 			#if msg == "route":
-			print(Fore.YELLOW + "TCP/Send: Sending positions to MierBot: {}".format(optimized_pos))
+			FormatPrint(1,"send","Sending positions to MierBot: {}".format(optimized_pos))
 			cl.send(bytes(optimized_pos, "utf-8"))
-			print(Fore.YELLOW + "TCP/Close: Socket Closed")
+			FormatPrint(1,"close","Socket Closed")
 			cl.close()
 			break;
 			#elif msg == "end":
@@ -147,8 +152,36 @@ def WebSocket():
 	ws_server = Websocket_Server(IP_ADDR, PORT_WS)
 	ws_server.run()
 
+def FormatPrint(type, proc, msg):
+	# 0=Websocket, 1=TCP
+	if type == 0:
+		print(Fore.CYAN + "WebSocket" + Fore.WHITE + "/",end='')
+	elif type == 1:
+		print(Fore.GREEN + "TCP" + Fore.WHITE + "/",end='')
+	else:
+		print(Fore.MAGENTA + "PrintError: Invalid socket value")
+		return 
+
+	if proc == "wait":
+		print(Fore.YELLOW + "Wait: " + Fore.WHITE + msg)
+	elif proc == "accept":
+		print(Fore.BLUE + "Accept: " + Fore.WHITE + msg)
+	elif proc == "close":
+		print(Fore.YELLOW + "Close: " + Fore.WHITE + msg)
+	elif proc == "recv":
+		print(Fore.LIGHTGREEN_EX + "Recv: " + Fore.WHITE + msg)
+	elif proc == "send":
+		print(Fore.LIGHTCYAN_EX + "Send: " + Fore.WHITE + msg)
+	elif proc == "error":
+		print(Fore.RED + "Error: " + msg)
+	else:
+		print(Fore.MAGENTA + "PrintError: Invalid process name")
+
+
+
 colorama.init(autoreset=True)
 thread_tcp = threading.Thread(target=TCP)
 thread_web = threading.Thread(target=WebSocket)
 thread_tcp.start()
+time.sleep(1)
 thread_web.start()
