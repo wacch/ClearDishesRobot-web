@@ -69,14 +69,15 @@ function websocketClient() {
     ws.onopen = async function (event) {
         console.log('接続完了',event);
         ws.send("routeassign");
-        await _sleep(2000);
         ws.send(seat);
         ack = event.returnValue;
     };
 
     //エラー時
     ws.onerror = function (error) {
-        console.log('接続エラー',error);
+        console.log('接続エラー', error);
+        fin = true;
+        setFailed(error.returnValue);
     };
 
     //メッセージ受信時
