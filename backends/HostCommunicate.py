@@ -12,9 +12,14 @@ PORT_WS = 9001 # ポートを指定
 PORT_SOCK = 9002
 BUFFER = 1024
 
-#data = ["A","E","F","D","G"]
 seats = ""
 optimized_pos = "0,0"
+
+'''
+0 = ロボット待機状態(新規の座席リスト受信を許可)
+1 = ロボット一時期間状態(新規の座席リスト受信を拒否)
+'''
+mode = 0
 
 class Websocket_Server():
 	client_route = 0
@@ -45,7 +50,7 @@ class Websocket_Server():
 
     # クライアントからメッセージを受信したときに呼ばれる関数
 	def message_received(self, client, server, message):
-		global optimized_pos, seats
+		global optimized_pos, seats, mode
 
 		FormatPrint(0, "recv", "client({}) said: {}".format(client['id'], message))
 		# 全クライアントにメッセージを送信
@@ -55,16 +60,33 @@ class Websocket_Server():
 		if client == self.client_route and self.client_route != 0:
 			optimized_pos = message
 			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
+			# ロボット一時帰還状態の場合
+			if mode == 1:
+				self.server.send_message(self.client_robot, optimized_pos)
+				mode = 0
 		# ルートアサインシステムから座席データが飛んできたときの処理
 		elif client == self.client_assign and self.client_assign != 0:
-			seats = message
-			FormatPrint(0, "recv", "arrived seats: {}".format(seats))
-			# 到達確認応答
-			self.server.send_message(self.client_assign, "ack")
-			# ここで座席データを送信
 			if(self.client_route != 0):
-				self.server.send_message(self.client_route, seats)
-				FormatPrint(0, "send", "Sending seats to RouteSearchSys: {}".format(seats))
+				if(mode == 0):
+					seats = message
+					FormatPrint(0, "recv", "arrived seats: {}".format(seats))
+					# 受信応答メッセージ
+					self.server.send_message(self.client_assign, "ack")
+					# ここで座席データをルートサーチに送信
+					self.server.send_message(self.client_route, seats)
+					FormatPrint(0, "send", "sending seats to RoutesSearchSys: {}".format(seats))
+				else:
+					self.server.send_message(self.client_assign, "lock")
+					FormatPrint(0, "send", "sending error: lock")
+			else:
+				self.server.send_message(self.client_assign, "refuse")
+				FormatPrint(0, "send", "sending error: refuse")
+
+		# ロボットから座標データが飛んできたときの処理
+		elif client == self.client_robot and self.client_robot != 0:
+			if(self.client_route != 0):
+				mode = 1
+				self.server.send_message(self.client_route, message)
 
 		# 各システムの初回接続時に飛んでくるメッセージを元に、クライアント情報を登録
 		if message == "routecalc" and self.client_route == 0:

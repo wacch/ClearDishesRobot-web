@@ -1,7 +1,7 @@
-const msg_default = '配膳ロボットに通信中です<br>しばらくお待ち下さい...'
-const msg_succeed_1 = '通信が成功しました<br>';
-const msg_succeed_2 = '番に配膳ロボットが向かいます';
-const msg_failed = '通信が失敗しました<br>初めからやり直してください';
+const msg_default = '管理システムに通信中です<br>しばらくお待ち下さい...'
+const msg_succeed_1 = '通信に成功しました<br>';
+const msg_succeed_2 = '番にMierBotが向かいます';
+const msg_failed = '通信が失敗しました<br>初めからやり直すか、再度接続を行ってください';
 const msg_suspension = '通信が中断されました<br>ホーム画面へ戻ります';
 
 const ip_addr = "ws://192.168.3.50:9001/"
@@ -15,7 +15,7 @@ var btn_retry = document.getElementById('btn_retry');
 
 var seat;
 var url_params = new URLSearchParams(window.location.search);
-var ack = false, lock = false;
+var ack = fin = false;
 
 setDefault();
 
@@ -60,7 +60,7 @@ websocketClient();
 
 
 function setDefault() {
-    lock = ack = false;
+    ack = fin = false;
     stat.innerHTML = '通信中';
     txt.innerHTML = msg_default;
     error.style.visibility = 'hidden'
@@ -68,16 +68,19 @@ function setDefault() {
     btn_retry.style.visibility = 'hidden'
 }
 
-function setFailed() {
+function setFailed(msg) {
     stat.innerHTML = '通信失敗';
     txt.innerHTML = msg_failed;
     error.style.visibility = 'visible'
-    error.innerHTML = 'WebSocket connection to \'' + ip_addr + '\' failed'
+    error.innerHTML = msg
+    btn.style.visibility = 'visible'
+    btn_retry.style.visibility = 'visible'
 }
 
 function setSucceed() {
     stat.innerHTML = '通信成功';
     txt.innerHTML = msg_succeed_1 + '<span id="seat">' + seat + '</span>' + msg_succeed_2;
+    btn.style.visibility = 'visible'
 }
 
 /*function btn_go_home() {
@@ -104,8 +107,6 @@ function websocketClient() {
         await _sleep(2000);
         ws.send(seat);
         ack = event.returnValue;
-        Responce();
-        ws.close();
     };
 
     //エラー時
@@ -115,23 +116,43 @@ function websocketClient() {
 
     //メッセージ受信時
     ws.onmessage = function (event) {
-        console.log('メッセージ受信',event);
+        console.log('メッセージ受信', event);
+        var msg = event.data
+        fin = true;
+        if (msg == 'ack') {
+            setSucceed();
+        } else if (msg == 'lock') {
+            setFailed('transmission refuse; route is locked');
+        } else if (msg == 'refuse') {
+            setFailed('transmission refuse; routesearch-sys unavailable');
+        }
+        ws.close();
     };
 
     //切断時
     ws.onclose = function () {
         console.log('通信切断');
-        Responce();
+        if(!fin)
+            setFailed('connection failure; cannot connect to \'' + ip_addr + '\'');
     };
 }
 
-function Responce() {
-    if (!ack) {
+/*function Responce(msg = '') {
+    if (!ack && !err) {
         lock = true;
-        setFailed();
-    } else if (ack && !lock) {
+        setFailed(msg);
+    } else if (err) {
+        setFailed(msg);
+    } else if (ack && !lock && !err) {
         setSucceed();
     }
     btn.style.visibility = 'visible'
     btn_retry.style.visibility = 'visible'
+}*/
+
+function sleep(waitMsec) {
+    var startMsec = new Date();
+
+    // 指定ミリ秒間だけループさせる（CPUは常にビジー状態）
+    while (new Date() - startMsec < waitMsec);
 }

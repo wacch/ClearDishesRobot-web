@@ -243,6 +243,9 @@ def main():
 	HOST_ADDR = "ws://192.168.3.50:9001/" #アドレス設定
 	ws_client = WebsocketClient(HOST_ADDR)
 	ws_client.run_forever()
+	#test = [0,0,1,2,2,0,0,1]
+	#test2 = ['A','H','C','D']
+	#optimize(test2)
 
 def optimize(place):	
 	positions = []
@@ -250,29 +253,32 @@ def optimize(place):
 	OptRouteCIE1 = []
 	OptRouteStr = ""
 
-	#入力
-	#place =["A","B","C","D","E","F","G","H","I"]
-	for i in range(len(place)):
-		if place[i] == "A":
-			positions.append((0,0))
-		if place[i] == "B":
-			positions.append((1,0))
-		if place[i] == "C":
-			positions.append((2,0))
-		if place[i] == "D":
-			positions.append((0,1))
-		if place[i] == "E":
-			positions.append((1,1))
-		if place[i] == "F":
-			positions.append((2,1))
-		if place[i] == "G":
-			positions.append((0,2))
-		if place[i] == "H":
-			positions.append((1,2))
-		if place[i] == "I":
-			positions.append((2,2))
+	result = str(place[0]).isdigit()
 
-
+	if result == False:
+		for i in range(len(place)):
+			if place[i] == "A":
+				positions.append((0,0))
+			if place[i] == "B":
+				positions.append((1,0))
+			if place[i] == "C":
+				positions.append((2,0))
+			if place[i] == "D":
+				positions.append((0,1))
+			if place[i] == "E":
+				positions.append((1,1))
+			if place[i] == "F":
+				positions.append((2,1))
+			if place[i] == "G":
+				positions.append((0,2))
+			if place[i] == "H":
+				positions.append((1,2))
+			if place[i] == "I":
+				positions.append((2,2))
+	else:
+		for i in range(0,len(place),2):
+			positions.append((place[i],place[i+1]))
+			print(place[i],place[i+1])
 
 	'''
 	#下げ膳のサンプル問題
@@ -353,7 +359,7 @@ def optimize(place):
 	#return OptRouteCIE1
 
 	#最適化の座標リストを1次元に直したものを文字列化したもの(出力)
-	print('出力:',OptRouteStr)
+	print('送信:',OptRouteStr)
 
 	return OptRouteStr
 
@@ -386,6 +392,6 @@ def optimize(place):
 	出力リスト = OptRouteCIE1
 
 	'''
-	
+
 if __name__ == "__main__":
 	main()
