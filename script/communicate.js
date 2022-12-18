@@ -69,8 +69,12 @@ function websocketClient() {
     ws.onopen = async function (event) {
         console.log('接続完了',event);
         ws.send("routeassign");
-        ws.send(seat);
         ack = event.returnValue;
+        if (ack) {
+            ws.send(seat);
+        } else {
+            setFailed('connection failure; unable to successfully connect to \'' + ip_addr + '\'');
+        }
     };
 
     //エラー時
