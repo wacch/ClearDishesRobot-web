@@ -19,7 +19,7 @@ optimized_pos = "0,0"
 0 = ロボット待機状態(新規の座席リスト受信を許可)
 1 = ロボット一時期間状態(新規の座席リスト受信を拒否)
 '''
-mode = 0
+lock = 0
 
 class Websocket_Server():
 	client_route = 0
@@ -61,13 +61,13 @@ class Websocket_Server():
 			optimized_pos = message
 			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
 			# ロボット一時帰還状態の場合
-			if mode == 1:
+			if lock == 1:
 				self.server.send_message(self.client_robot, optimized_pos)
-				mode = 0
+				lock = 0
 		# ルートアサインシステムから座席データが飛んできたときの処理
 		elif client == self.client_assign and self.client_assign != 0:
 			if(self.client_route != 0):
-				if(mode == 0):
+				if(lock == 0):
 					seats = message
 					FormatPrint(0, "recv", "arrived seats: {}".format(seats))
 					# 受信応答メッセージ
@@ -85,7 +85,7 @@ class Websocket_Server():
 		# ロボットから座標データが飛んできたときの処理
 		elif client == self.client_robot and self.client_robot != 0:
 			if(self.client_route != 0):
-				mode = 1
+				lock = 1
 				self.server.send_message(self.client_route, message)
 
 		# 各システムの初回接続時に飛んでくるメッセージを元に、クライアント情報を登録

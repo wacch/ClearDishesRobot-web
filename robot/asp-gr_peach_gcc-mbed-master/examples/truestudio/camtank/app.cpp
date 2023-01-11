@@ -142,32 +142,80 @@ void task_main(intptr_t exinf) {
 	pc.printf("Initializing...\r\n");
 
 	int ret;
-	/*IrBitField_T irbits;
+	IrBitField_T irbits;
 	unsigned int IR_values[6];
 	int threshold[6];
 	char position[2] = {0,0}, rotation = 0;
+	char add_left = 0, add_right = 0;
+	char position[2] = {0,0};
+	char route[128];
+
+	/*WiFi_init();
+	connect_tcp_session();
+
+	//認識メッセージを送信する
+	char* data = strdup("route");
+	ret = socket.send(data, strlen(data)); //文字列,文字数
+	if(ret<0){
+		pc.printf("MierBot/Recv: socket send error\r\n");
+		return;
+	}else{
+		pc.printf("MierBot/Recv: socket send %d byte\r\n", ret);
+	}
+	dly_tsk(1000); //サーバが受信し終えるのを待つ
+
+	while (1) {
+		ledStatus(0,1,1);
+		zumo.driveTank(0,0);
+		ret = socket.receive(rstr, 128);
+		if(ret >= 0){
+			pc.printf("MierBot/Recv: arrived optimized route: %s\r\n",route);
+			pc.printf("MierBot/Recv: socket close, wlan disconnect\r\n");
+			//socket.close();
+			wlan.disconnect();
+			break;
+		}else{
+			ledStatus(1,0,0);
+		}
+	}*/
 
 	while(1){
 		zumo.driveTank(0,0);
 		zumo.readAnalogIrValue(IR_values);
 		zumo.readIr(irbits);
 
-		pc.printf("left:%d %d, center:%d %d, right:%d %d\r\n", IR_values[5] ,IR[0], IR_values[3], IR[1], IR_values[0], IR[2]);
-		if((IR_values[5] <= 150) && (IR_values[3] >= 150) && (IR_values[0] <= 150)){
+		pc.printf("left:%d %d, center:%d %d, right:%d %d\r\n", IR_values[5] ,irbits.left, IR_values[3], irbits.center, IR_values[0], irbits.right);
+		if(IR_values[5] >= 150 && IR_values[3] >= 150 && IR_values[0] >= 150){
+			dly_tsk(1000);
+			zumo.driveTank(100,0);
+			dly_tsk(900);
+		}else if(IR_values[5] >= 150){
+			zumo.driveTank(35, 50 + add_right);
+			add_right += 2;
+		}else if(IR_values[0] >= 150){
+			zumo.driveTank(50 + add_left,35);
+			add_left += 2;
+		}else if(IR_values[5] <= 150 && IR_values[0] <= 150){
+			zumo.driveTank(35,35);
+			add_left = 0;
+			add_right = 0;
+		}
+		/*if((IR_values[5] <= 150) && (IR_values[3] >= 150) && (IR_values[0] <= 150)){
 			pc.printf("Drive\r\n");
-			zumo.driveTank(100,100);
+			zumo.driveTank(50,50);
 			position[0]++;
 			dly_tsk(250);
 		}else if((IR_values[5] >= 150) && (IR_values[3] >= 150) && (IR_values[0] >= 150)){
 			pc.printf("Slow\r\n");
-			zumo.driveTank(50,50);
+			zumo.driveTank(25,25);
 			dly_tsk(250);
 		}else if((IR_values[5] <= 150) && (IR_values[3] <= 150) && (IR_values[0] <= 150)){
 			pc.printf("Stop\r\n");
 			zumo.driveTank(0,0);
 			dly_tsk(250);
-		}
-	}*/
+		}*/
+			dly_tsk(250);
+	}
 	/*dly_tsk(5000);
 	tuning_IR(threshold);
 	for(int i=0;i<6;i++){
@@ -176,7 +224,7 @@ void task_main(intptr_t exinf) {
 
 
 	//networkの初期化
-	WiFi_init();
+	/*WiFi_init();
 	connect_tcp_session();
 
 	//文字列を送信する
@@ -190,7 +238,7 @@ void task_main(intptr_t exinf) {
 		pc.printf("MierBot/Recv: socket send %d byte\r\n", ret);
 	}
 
-	dly_tsk(1000); //サーバが受信し終えるのを待つ*/
+	dly_tsk(1000); //サーバが受信し終えるのを待つ
 
 	char rstr[128];
 	while (1) {
@@ -205,7 +253,7 @@ void task_main(intptr_t exinf) {
 			break;
 		}else{
 			ledStatus(1,0,0);
-		}
+		}*/
 
 		//実験用ラジコンコード
 		/*if(ret >= 0){
@@ -238,8 +286,8 @@ void task_main(intptr_t exinf) {
 			ret = socket.send("comp", 4);
 		}else{
 			ledStatus(1,0,0);
-		}*/
-	}
+		}
+	}*/
 }
 
 static void _wlan_inf_callback( uint8_t ucType, uint16_t usWid, uint16_t usSize, uint8_t *pucData ){

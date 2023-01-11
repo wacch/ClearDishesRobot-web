@@ -80,8 +80,8 @@ function websocketClient() {
     //エラー時
     ws.onerror = function (error) {
         console.log('接続エラー', error);
-        fin = true;
-        setFailed(error.returnValue);
+        //fin = true;
+        //setFailed(error.returnValue);
     };
 
     //メッセージ受信時
