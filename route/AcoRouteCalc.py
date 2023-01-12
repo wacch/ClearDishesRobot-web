@@ -280,6 +280,8 @@ def optimize(place):
 			positions.append((place[i],place[i+1]))
 			print(place[i],place[i+1])
 
+	print('入力座標:',positions)
+
 	'''
 	#下げ膳のサンプル問題
 	positions = [(0,0),	#0 a
@@ -348,12 +350,12 @@ def optimize(place):
 	
 	#最短経路更新リストの最後を取り出し表示
 	print('最短経路:',OptRoute)
+	'''
 
 	#最適化後の座標リスト
 	print('最適化座標:',OptRouteCIE)
 
 	#最適化の座標リストを1次元に直したもの
-	'''
 	print('出力:',OptRouteCIE1)
 
 	#return OptRouteCIE1

@@ -5,7 +5,7 @@ const msg_failed = '通信が失敗しました<br>初めからやり直すか�
 const msg_suspension = '通信が中断されました<br>ホーム画面へ戻ります';
 
 const ip_addr = "ws://192.168.3.50:9001/"
-const _sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const timeout_time = 10000
 
 var stat = document.getElementById('stat');
 var txt = document.getElementById('txt');
@@ -16,6 +16,16 @@ var btn_retry = document.getElementById('btn_retry');
 var seat;
 var url_params = new URLSearchParams(window.location.search);
 var ack = fin = false;
+
+var debug = true;
+var mea_s = null
+
+var acktimeout = function () {
+    if (!fin) {
+        fin = true;
+        setFailed('connection failure; connection time out');
+    }
+};
 
 setDefault();
 
@@ -42,24 +52,28 @@ function setDefault() {
     ack = fin = false;
     stat.innerHTML = '通信中';
     txt.innerHTML = msg_default;
-    error.style.visibility = 'hidden'
-    btn.style.visibility = 'hidden'
-    btn_retry.style.visibility = 'hidden'
+    error.style.visibility = 'hidden';
+    btn.style.visibility = 'hidden';
+    btn_retry.style.visibility = 'hidden';
 }
 
 function setFailed(msg) {
     stat.innerHTML = '通信失敗';
     txt.innerHTML = msg_failed;
-    error.style.visibility = 'visible'
-    error.innerHTML = msg
-    btn.style.visibility = 'visible'
-    btn_retry.style.visibility = 'visible'
+    error.style.visibility = 'visible';
+    error.innerHTML = msg;
+    btn.style.visibility = 'visible';
+    btn_retry.style.visibility = 'visible';
 }
 
-function setSucceed() {
+function setSucceed(msg = "") {
     stat.innerHTML = '通信成功';
     txt.innerHTML = msg_succeed_1 + '<span id="seat">' + seat + '</span>' + msg_succeed_2;
-    btn.style.visibility = 'visible'
+    btn.style.visibility = 'visible';
+    if (debug) {
+        error.style.visibility = 'visible';
+        error.innerHTML = msg;
+    }
 }
 
 function websocketClient() {
@@ -67,7 +81,8 @@ function websocketClient() {
 
     //接続時
     ws.onopen = async function (event) {
-        console.log('接続完了',event);
+        console.log('接続完了', event);
+        mea_s = new Date();
         ws.send("routeassign");
         ack = event.returnValue;
         if (ack) {
@@ -75,6 +90,7 @@ function websocketClient() {
         } else {
             setFailed('connection failure; unable to successfully connect to \'' + ip_addr + '\'');
         }
+        setTimeout(acktimeout, timeout_time)
     };
 
     //エラー時
@@ -88,13 +104,16 @@ function websocketClient() {
     ws.onmessage = function (event) {
         console.log('メッセージ受信', event);
         var msg = event.data
-        fin = true;
-        if (msg == 'ack') {
-            setSucceed();
-        } else if (msg == 'lock') {
-            setFailed('transmission refuse; route is locked');
-        } else if (msg == 'refuse') {
-            setFailed('transmission refuse; routesearch-sys unavailable');
+        if (!fin) {
+            fin = true;
+            if (msg == 'ack') {
+                var diff = new Date().getTime() - mea_s.getTime();
+                setSucceed('DEBUG; elapsed time(ms): ' + diff);
+            } else if (msg == 'lock') {
+                setFailed('transmission refuse; route is locked');
+            } else if (msg == 'refuse') {
+                setFailed('transmission refuse; routesearch-sys unavailable');
+            }
         }
         ws.close();
     };

@@ -14,6 +14,8 @@ BUFFER = 1024
 
 seats = ""
 optimized_pos = "0,0"
+return_pos = "0,0"
+ws_server = None
 
 '''
 0 = ロボット待機状態(新規の座席リスト受信を許可)
@@ -31,7 +33,7 @@ class Websocket_Server():
 		FormatPrint(0,"wait","Awaiting Connection")
 
 	# クライアント接続時に呼ばれる関数
-	def new_client(self, client, server):
+	def client_connected(self, client, server):
 		FormatPrint(0, "accept", "new client connected and was given id {}".format(client['id']))
 		# 全クライアントにメッセージを送信
 		#self.server.send_message_to_all("hey all, a new client has joined us")
@@ -49,8 +51,8 @@ class Websocket_Server():
 			self.client_robot = 0
 
     # クライアントからメッセージを受信したときに呼ばれる関数
-	def message_received(self, client, server, message):
-		global optimized_pos, seats, mode
+	def on_message(self, client, server, message):
+		global optimized_pos, lock, return_pos, seats
 
 		FormatPrint(0, "recv", "client({}) said: {}".format(client['id'], message))
 		# 全クライアントにメッセージを送信
@@ -60,6 +62,8 @@ class Websocket_Server():
 		if client == self.client_route and self.client_route != 0:
 			optimized_pos = message
 			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
+			#ルートサーチの処理が終わったらackを送信
+			self.server.send_message(self.client_assign, "ack")
 			# ロボット一時帰還状態の場合
 			if lock == 1:
 				self.server.send_message(self.client_robot, optimized_pos)
@@ -71,7 +75,7 @@ class Websocket_Server():
 					seats = message
 					FormatPrint(0, "recv", "arrived seats: {}".format(seats))
 					# 受信応答メッセージ
-					self.server.send_message(self.client_assign, "ack")
+					#self.server.send_message(self.client_assign, "ack")
 					# ここで座席データをルートサーチに送信
 					self.server.send_message(self.client_route, seats)
 					FormatPrint(0, "send", "sending seats to RoutesSearchSys: {}".format(seats))
@@ -82,7 +86,7 @@ class Websocket_Server():
 				self.server.send_message(self.client_assign, "refuse")
 				FormatPrint(0, "send", "sending error: refuse")
 
-		# ロボットから座標データが飛んできたときの処理
+		# ロボットから座標データが飛んできたときの処理(TCPの方に書き直す必要あり)
 		elif client == self.client_robot and self.client_robot != 0:
 			if(self.client_route != 0):
 				lock = 1
@@ -95,9 +99,11 @@ class Websocket_Server():
 		elif message == "routeassign" and self.client_assign == 0:
 			self.client_assign = client
 			FormatPrint(0, "recv", "assign client({}) registerd".format(self.client_assign['address']))
+		'''
 		elif message == "robot" and self.client_robot == 0:
 			self.client_robot = client
 			FormatPrint(0, "recv", "assign client({}) registerd".format(self.client_robot['address']))
+		'''
 
 		'''
 		if message == "robot":
@@ -114,16 +120,19 @@ class Websocket_Server():
     # サーバーを起動する
 	def run(self):
 		# クライアント接続時のコールバック関数にself.new_client関数をセット
-		self.server.set_fn_new_client(self.new_client)
+		self.server.set_fn_new_client(self.client_connected)
 		# クライアント切断時のコールバック関数にself.client_left関数をセット
 		self.server.set_fn_client_left(self.client_left)
 		# メッセージ受信時のコールバック関数にself.message_received関数をセット
-		self.server.set_fn_message_received(self.message_received) 
+		self.server.set_fn_message_received(self.on_message) 
 		self.server.run_forever()
+		
+	def link(self,message):
+		print("test message:",message)
 
 # Socket通信サーバー
 def TCP():
-	global optimized_pos
+	global optimized_pos, lock, return_pos, ws_server
 
 	sv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	# IPとポート番号を指定
@@ -147,9 +156,14 @@ def TCP():
 			FormatPrint(1,"close","Socket Closed")
 			cl.close()
 			break;
-			#elif msg == "end":
-			#	print(Fore.YELLOW + "TCP/Close: Socket Closed")
-			#	cl.close()
+			'''
+			elif msg == "return":
+				return_pos = cl.recv(128).decode("utf-8")
+				ws_server.link("test")
+			elif msg == "end":
+				print(Fore.YELLOW + "TCP/Close: Socket Closed")
+				cl.close()
+			'''
 
 	'''
 	cansend = True
@@ -171,6 +185,7 @@ def TCP():
 
 # WebSocketサーバー
 def WebSocket():
+	global ws_server
 	ws_server = Websocket_Server(IP_ADDR, PORT_WS)
 	ws_server.run()
 
@@ -198,8 +213,6 @@ def FormatPrint(type, proc, msg):
 		print(Fore.RED + "Error: " + msg)
 	else:
 		print(Fore.MAGENTA + "PrintError: Invalid process name")
-
-
 
 colorama.init(autoreset=True)
 thread_tcp = threading.Thread(target=TCP)
