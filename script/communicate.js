@@ -19,6 +19,7 @@ var ack = fin = false;
 
 var debug = true;
 var mea_s = null
+var diff_s = null
 
 var acktimeout = function () {
     if (!fin) {
@@ -72,7 +73,7 @@ function setSucceed(msg = "") {
     btn.style.visibility = 'visible';
     if (debug) {
         error.style.visibility = 'visible';
-        error.innerHTML = msg;
+        error.innerHTML = "DEBUG; send time(ms): " + diff_s + msg;
     }
 }
 
@@ -104,18 +105,20 @@ function websocketClient() {
     ws.onmessage = function (event) {
         console.log('メッセージ受信', event);
         var msg = event.data
-        if (!fin) {
+        if (!fin && msg != 'debug') {
             fin = true;
             if (msg == 'ack') {
                 var diff = new Date().getTime() - mea_s.getTime();
-                setSucceed('DEBUG; elapsed time(ms): ' + diff);
+                setSucceed(' ,elapsed time(ms): ' + diff);
             } else if (msg == 'lock') {
                 setFailed('transmission refuse; route is locked');
             } else if (msg == 'refuse') {
                 setFailed('transmission refuse; routesearch-sys unavailable');
             }
+            ws.close();
+        } else if (msg == 'debug') {
+            diff_s = new Date().getTime() - mea_s.getTime();
         }
-        ws.close();
     };
 
     //切断時

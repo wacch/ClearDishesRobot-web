@@ -64,10 +64,11 @@ class Websocket_Server():
 			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
 			#ルートサーチの処理が終わったらackを送信
 			self.server.send_message(self.client_assign, "ack")
+			FormatPrint(0, "debug", "sending message to assign: ack")
 			# ロボット一時帰還状態の場合
-			if lock == 1:
-				self.server.send_message(self.client_robot, optimized_pos)
-				lock = 0
+			#if lock == 1:
+			#	self.server.send_message(self.client_robot, optimized_pos)
+			#	lock = 0
 		# ルートアサインシステムから座席データが飛んできたときの処理
 		elif client == self.client_assign and self.client_assign != 0:
 			if(self.client_route != 0):
@@ -75,7 +76,8 @@ class Websocket_Server():
 					seats = message
 					FormatPrint(0, "recv", "arrived seats: {}".format(seats))
 					# 受信応答メッセージ
-					#self.server.send_message(self.client_assign, "ack")
+					self.server.send_message(self.client_assign, "debug")
+					FormatPrint(0, "debug", "sending message to assign: debug")
 					# ここで座席データをルートサーチに送信
 					self.server.send_message(self.client_route, seats)
 					FormatPrint(0, "send", "sending seats to RoutesSearchSys: {}".format(seats))
@@ -209,6 +211,8 @@ def FormatPrint(type, proc, msg):
 		print(Fore.LIGHTGREEN_EX + "Recv: " + Fore.WHITE + msg)
 	elif proc == "send":
 		print(Fore.LIGHTCYAN_EX + "Send: " + Fore.WHITE + msg)
+	elif proc == "debug":
+		print(Fore.LIGHTMAGENTA_EX + "Debug: " + Fore.WHITE + msg)
 	elif proc == "error":
 		print(Fore.RED + "Error: " + msg)
 	else:

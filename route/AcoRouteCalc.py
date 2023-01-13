@@ -7,6 +7,8 @@ import copy
 import websocket
 import time
 import pickle
+import gc
+import sys, os
 try:
     import thread
 except ImportError:
@@ -160,6 +162,8 @@ class Field:
 			for i in range(len(line)):
 				for j in range(len(line)):
 					self.distance[i][j]=float(line[i][j])
+
+		f.close()
 					
 class WebsocketClient():
 	#新規の座席リストを受信したら、演算し、送信
@@ -169,7 +173,7 @@ class WebsocketClient():
 	def __init__(self, host_addr):
 		websocket.enableTrace(False)
 
-		# おまじない
+		# コールバック登録
 		self.ws = websocket.WebSocketApp(host_addr,
 			on_message = lambda ws, msg: self.on_message(ws, msg),
 			on_error = lambda ws, msg: self.on_error(ws, msg),
@@ -182,6 +186,9 @@ class WebsocketClient():
 		print("receive : {}".format(self.seats))
 		self.positions = optimize(self.seats)
 		self.ws.send(self.positions)
+
+		#再起動(デバッグ用)
+		sys.exit()
 		#thread.start_new_thread(self.run, (self.positions))
 
 	# エラー時に呼ばれる関数
@@ -239,13 +246,16 @@ def create_dist_matrix(places,f_name):
 		writer = csv.writer(f)
 		writer.writerows(dist_matrix)
 
+	f.close()
+
 def main():
 	HOST_ADDR = "ws://192.168.3.50:9001/" #アドレス設定
 	ws_client = WebsocketClient(HOST_ADDR)
 	ws_client.run_forever()
 	#test = [0,0,1,2,2,0,0,1]
 	#test2 = ['A','H','C','D']
-	#optimize(test2)
+	#for i in range(10):
+	#	optimize(test2)
 
 def optimize(place):	
 	positions = []
@@ -362,6 +372,11 @@ def optimize(place):
 
 	#最適化の座標リストを1次元に直したものを文字列化したもの(出力)
 	print('送信:',OptRouteStr)
+
+	del colony
+	del field
+	del ant
+	gc.collect()
 
 	return OptRouteStr
 
