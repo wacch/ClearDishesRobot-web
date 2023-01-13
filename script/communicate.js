@@ -1,22 +1,27 @@
+//テキストメッセージ
 const msg_default = '管理システムに通信中です<br>しばらくお待ち下さい...'
 const msg_succeed_1 = '通信に成功しました<br>';
 const msg_succeed_2 = '番にMierBotが向かいます';
 const msg_failed = '通信が失敗しました<br>初めからやり直すか、再度接続を行ってください';
 const msg_suspension = '通信が中断されました<br>ホーム画面へ戻ります';
 
+//接続情報
 const ip_addr = "ws://192.168.3.50:9001/"
-const timeout_time = 10000
+const timeout = 10000
 
+//css管理用変数
 var stat = document.getElementById('stat');
 var txt = document.getElementById('txt');
 var error = document.getElementById('code');
 var btn = document.getElementById('btn');
 var btn_retry = document.getElementById('btn_retry');
 
+//通常変数
 var seat;
 var url_params = new URLSearchParams(window.location.search);
-var ack = fin = false;
+var ack = fin = get = false;
 
+//デバッグ用変数
 var debug = true;
 var mea_s = null
 var diff_s = null
@@ -30,10 +35,6 @@ var acktimeout = function () {
 
 setDefault();
 
-if(url_params.has('seat')){
-    seat = url_params.get('seat');
-}
-
 window.addEventListener('beforeunload', function dontReload(e) {
     e.preventDefault();
 }, false);
@@ -46,6 +47,12 @@ btn_retry.addEventListener('click', function () {
     websocketClient();
     setDefault();
 });
+
+if (url_params.has('seat')) {
+    seat = url_params.get('seat');
+} else if (url_params.has('get')) {
+    get = true
+}
 
 websocketClient();
 
@@ -87,11 +94,14 @@ function websocketClient() {
         ws.send("routeassign");
         ack = event.returnValue;
         if (ack) {
-            ws.send(seat);
+            if (!get)
+                ws.send(seat);
+            else
+                ws.send("get");
         } else {
             setFailed('connection failure; unable to successfully connect to \'' + ip_addr + '\'');
         }
-        setTimeout(acktimeout, timeout_time)
+        setTimeout(acktimeout, timeout)
     };
 
     //エラー時
@@ -114,6 +124,12 @@ function websocketClient() {
                 setFailed('transmission refuse; route is locked');
             } else if (msg == 'refuse') {
                 setFailed('transmission refuse; routesearch-sys unavailable');
+            } else {
+                if (msg != "") {
+                    window.location = 'robbotdrive.html' + '?seat=' + msg;
+                } else {
+                    window.location = 'robbotdrive.html';
+                }
             }
             ws.close();
         } else if (msg == 'debug') {

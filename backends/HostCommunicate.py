@@ -13,6 +13,7 @@ PORT_SOCK = 9002
 BUFFER = 1024
 
 seats = ""
+optimized_seats = ""
 optimized_pos = "0,0"
 return_pos = "0,0"
 ws_server = None
@@ -52,7 +53,7 @@ class Websocket_Server():
 
     # クライアントからメッセージを受信したときに呼ばれる関数
 	def on_message(self, client, server, message):
-		global optimized_pos, lock, return_pos, seats
+		global optimized_pos, lock, return_pos, seats, optimized_seats
 
 		FormatPrint(0, "recv", "client({}) said: {}".format(client['id'], message))
 		# 全クライアントにメッセージを送信
@@ -62,35 +63,42 @@ class Websocket_Server():
 		if client == self.client_route and self.client_route != 0:
 			optimized_pos = message
 			FormatPrint(0, "recv", "arrived optimize route: {}".format(optimized_pos))
+			optimized_seats = Convert(message)
+			FormatPrint(0, "debug", "converted positions to seats: {}".format(optimized_seats))
 			#ルートサーチの処理が終わったらackを送信
 			self.server.send_message(self.client_assign, "ack")
-			FormatPrint(0, "debug", "sending message to assign: ack")
+			FormatPrint(0, "send", "sending message to assign: ack")
 			# ロボット一時帰還状態の場合
 			#if lock == 1:
 			#	self.server.send_message(self.client_robot, optimized_pos)
 			#	lock = 0
+
 		# ルートアサインシステムから座席データが飛んできたときの処理
 		elif client == self.client_assign and self.client_assign != 0:
-			if(self.client_route != 0):
-				if(lock == 0):
-					seats = message
-					FormatPrint(0, "recv", "arrived seats: {}".format(seats))
-					# 受信応答メッセージ
-					self.server.send_message(self.client_assign, "debug")
-					FormatPrint(0, "debug", "sending message to assign: debug")
-					# ここで座席データをルートサーチに送信
-					self.server.send_message(self.client_route, seats)
-					FormatPrint(0, "send", "sending seats to RoutesSearchSys: {}".format(seats))
-				else:
-					self.server.send_message(self.client_assign, "lock")
-					FormatPrint(0, "send", "sending error: lock")
+			# 座席取得メッセージだった場合
+			if message == "get":
+				self.server.send_message(self.client_assign, optimized_seats)
 			else:
-				self.server.send_message(self.client_assign, "refuse")
-				FormatPrint(0, "send", "sending error: refuse")
+				if self.client_route != 0:
+					if lock == 0:
+						seats = message
+						FormatPrint(0, "recv", "arrived seats: {}".format(seats))
+						# 受信応答メッセージ
+						self.server.send_message(self.client_assign, "debug")
+						FormatPrint(0, "send", "sending message to assign: debug")
+						# ここで座席データをルートサーチに送信
+						self.server.send_message(self.client_route, seats)
+						FormatPrint(0, "send", "sending seats to RoutesSearchSys: {}".format(seats))
+					else:
+						self.server.send_message(self.client_assign, "lock")
+						FormatPrint(0, "send", "sending error: lock")
+				else:
+					self.server.send_message(self.client_assign, "refuse")
+					FormatPrint(0, "send", "sending error: refuse")
 
 		# ロボットから座標データが飛んできたときの処理(TCPの方に書き直す必要あり)
 		elif client == self.client_robot and self.client_robot != 0:
-			if(self.client_route != 0):
+			if self.client_route != 0:
 				lock = 1
 				self.server.send_message(self.client_route, message)
 
@@ -184,6 +192,34 @@ def TCP():
 	'''
 
 	#cl.close()
+
+def Convert(place):
+	place_list = place.split(',')
+	positions = []
+	seats = []
+	for i in range(0,len(place_list),2):
+		positions.append((int(place_list[i]),int(place_list[i+1])))
+
+	for i in positions:
+		if i == (0,0):
+			seats.append("A")
+		if i == (1,0):
+			seats.append("B")
+		if i == (2,0):
+			seats.append("C")
+		if i == (0,1):
+			seats.append("D")
+		if i == (1,1):
+			seats.append("E")
+		if i == (2,1):
+			seats.append("F")
+		if i == (0,2):
+			seats.append("G")
+		if i == (1,2):
+			seats.append("H")
+		if i == (2,2):
+			seats.append("I")
+	return ','.join(seats)
 
 # WebSocketサーバー
 def WebSocket():
