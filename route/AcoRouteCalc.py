@@ -9,6 +9,9 @@ import time
 import pickle
 import gc
 import sys, os
+import math
+import colorama
+from colorama import Fore, Back
 try:
     import thread
 except ImportError:
@@ -21,6 +24,9 @@ EVA_R = 0.05	   # フェロモンの蒸発率
 PHERO_R = 0.95	 # フェロモンに基づいて経路を選択する確率
 PHERO_L = 1		# フェロモンを考慮する度合い
 HEU_L = 1		  # ヒューリスティック情報を考慮する度合い
+
+time_s = None
+time_e = None
 
 #コロニークラス
 class Colony:
@@ -182,10 +188,16 @@ class WebsocketClient():
 
 	# メッセージ受信に呼ばれる関数
 	def on_message(self, ws, message):
+		global time_s, time_e
+		time_s = time.perf_counter()
 		self.seats = message.split(',')
-		print("receive : {}".format(self.seats))
+		FormatPrint(0, 'recv', "receved seats: {}".format(self.seats))
 		self.positions = optimize(self.seats)
+		time_e = time.perf_counter()
+		FormatPrint(1, 'debug', "処理時間(ms): {}".format(math.floor((time_e - time_s) * 1000)))
 		self.ws.send(self.positions)
+		FormatPrint(0, 'send', 'sending optimized positions: {}'.format(self.positions))
+
 
 		#再起動(デバッグ用)
 		sys.exit()
@@ -197,12 +209,13 @@ class WebsocketClient():
 
 	# サーバーから切断時に呼ばれる関数
 	def on_close(self, ws):
-		print("### connection closed ###")
+		FormatPrint(0, 'close', "connection closed")
 
 	# サーバーから接続時に呼ばれる関数
 	def on_open(self, ws):
-		print("### connection established ###")
+		FormatPrint(0, 'accept', "connection established")
 		self.ws.send("routecalc")
+		FormatPrint(0, 'send', "sending message to host: routecalc")
 		#thread.start_new_thread(self.run, (self.positions, True))
 
 	# サーバーへのメッセージ送信に呼ばれる関数
@@ -216,7 +229,6 @@ class WebsocketClient():
 		self.ws.send(positions)
 	
 		#self.ws.close()
-		print("send complete")
 	
 	# websocketクライアント起動
 	def run_forever(self):
@@ -249,6 +261,7 @@ def create_dist_matrix(places,f_name):
 	f.close()
 
 def main():
+	colorama.init(autoreset=True)
 	HOST_ADDR = "ws://192.168.3.50:9001/" #アドレス設定
 	ws_client = WebsocketClient(HOST_ADDR)
 	ws_client.run_forever()
@@ -258,6 +271,7 @@ def main():
 	#	optimize(test2)
 
 def optimize(place):	
+	global time_s, time_e
 	positions = []
 	OptRouteCIE = []
 	OptRouteCIE1 = []
@@ -290,7 +304,9 @@ def optimize(place):
 			positions.append((place[i],place[i+1]))
 			print(place[i],place[i+1])
 
-	print('入力座標:',positions)
+	FormatPrint(1, 'debug', '入力座標: {}'.format(positions))
+	#print('入力座標:',positions)
+
 
 	'''
 	#下げ膳のサンプル問題
@@ -349,7 +365,8 @@ def optimize(place):
 	'''
 
 	#入力
-	print('入力:',place)
+	FormatPrint(1, 'debug', '入力: {}'.format(place))
+	#print('入力: ',place)
 
 	'''
 	#入力リストの順番の座標
@@ -363,15 +380,19 @@ def optimize(place):
 	'''
 
 	#最適化後の座標リスト
-	print('最適化座標:',OptRouteCIE)
+	FormatPrint(1, 'debug', '最適化座標: {}'.format(OptRouteCIE))
+	#print('最適化座標: ',OptRouteCIE)
 
 	#最適化の座標リストを1次元に直したもの
-	print('出力:',OptRouteCIE1)
+	FormatPrint(1, 'debug', '出力: {}'.format(OptRouteCIE1))
+	#print('出力: ',OptRouteCIE1)
 
 	#return OptRouteCIE1
 
 	#最適化の座標リストを1次元に直したものを文字列化したもの(出力)
-	print('送信:',OptRouteStr)
+	FormatPrint(1, 'debug', '送信: {}'.format(OptRouteStr))
+	#print('送信: ',OptRouteStr)
+	#print('処理時間(ms): ',elaptime)
 
 	del colony
 	del field
@@ -409,6 +430,33 @@ def optimize(place):
 	出力リスト = OptRouteCIE1
 
 	'''
+
+def FormatPrint(type, proc, msg):
+	# 0=Websocket, 1=Progress
+	if type == 0:
+		print(Fore.CYAN + "WebSocket" + Fore.WHITE + "/",end='')
+	elif type == 1:
+		print(Fore.LIGHTBLACK_EX + "Progress" + Fore.WHITE + "/",end='')
+	else:
+		print(Fore.MAGENTA + "PrintError: Invalid socket value")
+		return 
+
+	if proc == "wait":
+		print(Fore.YELLOW + "Wait: " + Fore.WHITE + msg)
+	elif proc == "accept":
+		print(Fore.BLUE + "Accept: " + Fore.WHITE + msg)
+	elif proc == "close":
+		print(Fore.YELLOW + "Close: " + Fore.WHITE + msg)
+	elif proc == "recv":
+		print(Fore.LIGHTGREEN_EX + "Recv: " + Fore.WHITE + msg)
+	elif proc == "send":
+		print(Fore.LIGHTCYAN_EX + "Send: " + Fore.WHITE + msg)
+	elif proc == "debug":
+		print(Fore.LIGHTMAGENTA_EX + "Debug: " + Fore.WHITE + msg)
+	elif proc == "error":
+		print(Fore.RED + "Error: " + msg)
+	else:
+		print(Fore.MAGENTA + "PrintError: Invalid process name")
 
 if __name__ == "__main__":
 	main()
