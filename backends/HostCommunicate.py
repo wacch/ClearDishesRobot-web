@@ -2,13 +2,11 @@
 from websocket_server import WebsocketServer
 import colorama
 from colorama import Fore, Back
-import logging
 import socket
-import pickle
 import threading
 import time
 
-IP_ADDR = "192.168.3.50" # IPアドレスを指定
+IP_ADDR = socket.gethostbyname(socket.gethostname()) # IPアドレスを指定
 PORT_WS = 9001 # ポートを指定
 PORT_SOCK = 9002
 BUFFER = 1024
