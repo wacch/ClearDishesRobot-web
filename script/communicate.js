@@ -22,7 +22,7 @@ var url_params = new URLSearchParams(window.location.search);
 var ack = fin = get = false;
 
 //デバッグ用変数
-var debug = true;
+var debug = false;
 var mea_s = null
 var diff_s = null
 

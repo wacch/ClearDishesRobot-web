@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from websocket_server import WebsocketServer
 import colorama
 from colorama import Fore, Back
