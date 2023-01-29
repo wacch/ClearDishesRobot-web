@@ -36,6 +36,10 @@ for(let i of button){
 }
 
 var ok_btn = document.getElementById('ok');
-ok_btn.addEventListener('click', function(){
-    window.location = 'index.html' + '?seat=' + (is_pushed.sort()).toString();
+ok_btn.addEventListener('click', function () {
+    if (is_pushed.length >= 1) {
+        window.location = 'index.html' + '?seat=' + (is_pushed.sort()).toString();
+    } else {
+        alert('座席は最低でも一箇所以上選択してください。');
+    }
 });

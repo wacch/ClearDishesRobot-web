@@ -200,7 +200,7 @@ class WebsocketClient():
 
 
 		#再起動(デバッグ用)
-		sys.exit()
+		#sys.exit()
 		#thread.start_new_thread(self.run, (self.positions))
 
 	# エラー時に呼ばれる関数
