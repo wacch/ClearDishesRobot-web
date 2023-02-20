@@ -9,8 +9,7 @@
     text-align: center;
 }
 .wrapper > p:nth-child(1),
-.wrapper > p:nth-child(2),
-.wrapper > p:nth-child(3) {
+.wrapper > p:nth-child(2) {
     font-size: 32px;
 }
 .wrapper > p:nth-child(2) {

@@ -1,14 +1,23 @@
-const arrow = '<p>↓</p>\n';
+const arrow = '<p>↓</p>';
 const end = '<p>キッチン</p>';
-const seat = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
-var num = Math.floor(Math.random()*3 + 1);
+//const seat = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'];
+//var num = Math.floor(Math.random()*3 + 1);
 var txt = document.getElementsByClassName('wrapper');
-var string = ''
+var url_params = new URLSearchParams(window.location.search);
+var string = '';
+var seats;
 
-for(var i = 0; i < num; i++){
-    string = string + '<p><span id="seat">' + seat[Math.floor(Math.random()*seat.length)] + '</span>番' + Math.floor(Math.random()*6 + 1) + '人</p>\n' + arrow;
+if (url_params.has('seat')) {
+    seats = url_params.get('seat').split(',');
+    for (var i = 0; i < seats.length; i++) {
+        string = string + '<p><span id="seat">' + seats[i] + '</span>番</p>' + arrow;
+        //string = string + '<p><span id="seat">' + seats[Math.floor(Math.random()*seat.length)] + '</span>番' + Math.floor(Math.random()*6 + 1) + '人</p>\n' + arrow;
+    }
+    string = string + end;
+} else {
+    string = '<p><span id="seat">席番は登録されていません</span></p>'
 }
-string = string + end;
+
 txt[0].innerHTML = string;
 
 // var btn_home = document.getElementById('home');
